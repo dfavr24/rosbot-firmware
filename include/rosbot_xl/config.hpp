@@ -33,6 +33,7 @@
 #include "ros/publishers/buttons_publisher.hpp"
 #include "ros/publishers/imu_publisher.hpp"
 #include "ros/publishers/joint_state_publisher.hpp"
+#include "ros/publishers/actuator_fb_publisher.hpp"
 #include "transport/spi_transport.hpp"
 
 // ───────── Arduino settings ─────────
@@ -369,6 +370,7 @@ inline QueueHandle_t battery_queue;
 inline QueueHandle_t imu_queue;
 inline QueueHandle_t joint_state_queue;
 inline QueueHandle_t led_strip_queue;
+inline QueueHandle_t actuator_fb_queue;
 
 inline constexpr uint8_t BATTERY_NUM_CELLS = 3;
 inline constexpr float BATTERY_CELL_CAPACITY = 2.6f;  // Ah
@@ -426,3 +428,10 @@ inline constexpr SerialConfig DIAGNOSTIC_SERIAL_CONFIG = {
     .txPin = PA9,
     .timeout_ms = 1,
     .name = "FTDI_SERIAL"};
+
+// -───────── Actuator Feedback Publisher ─────────
+// actuator feedback publisher (incremental pulse count from GPIO3 encoder)
+inline constexpr ActuatorFbPublisherConfig actuator_fb_pub_config = {
+    .topic = "actuator_feedback", 
+    .queue = actuator_fb_queue,
+};

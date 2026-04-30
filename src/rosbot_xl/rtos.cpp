@@ -32,6 +32,7 @@
 #include "ros/publishers/battery_publisher.hpp"
 #include "ros/publishers/imu_publisher.hpp"
 #include "ros/publishers/joint_state_publisher.hpp"
+#include "ros/publishers/actuator_fb_publisher.hpp"
 #include "ros/ros_node.hpp"
 
 // ───── Externs ─────
@@ -44,6 +45,7 @@ void createQueues() {
   imu_queue = xQueueCreate(1, sizeof(ImuStamped));
   joint_state_queue = xQueueCreate(1, sizeof(JointStateStamped));
   led_strip_queue = xQueueCreate(1, sizeof(LedFrameMsg));
+  actuator_fb_queue = xQueueCreate(1, sizeof(uint32_t));
 }
 
 // ───── Create all tasks ─────
@@ -55,6 +57,7 @@ void monitorTask(void* p);
 void motorControlTask(void* p);
 void shutdownTask(void* p);
 void uRosTask(void* p);
+void publishActuatorFeedbackTask(void* p);
 
 TaskConfig tasks[] = {
     {"HwMonitor", Priority::OBSERVING, Stack::S, 10, hwMonitorTask},
@@ -66,6 +69,7 @@ TaskConfig tasks[] = {
     {"MotorControl", Priority::CONTROL, Stack::XXS, 200, motorControlTask},
     {"Shutdown", Priority::OBSERVING, Stack::M, 3, shutdownTask},
     {"uRos", Priority::COMMUNICATION, Stack::XXL, 1000, uRosTask},
+    {"ActuatorFeedback", Priority::SENSORS, Stack::S, 100, publishActuatorFeedbackTask},
 };
 
 TaskHandleWrapper taskHandles[sizeof(tasks) / sizeof(tasks[0])];
@@ -244,4 +248,26 @@ void uRosTask(void* p) {
     g_ros_node.loop();
     vTaskDelayUntil(&wake_time, period);
   }
+}
+
+void publishActuatorFeedbackTask(void* p) {
+    TickType_t period = pdMS_TO_TICKS(100); // 100ms interval
+    TickType_t last_wake = xTaskGetTickCount();
+
+    static uint32_t prev_count = 0;
+
+    while (1) {
+        uint32_t current_count = ext_gpio3_pulse_count;
+        uint32_t pulses_in_last_period = current_count - prev_count;
+
+        prev_count = current_count;
+
+        //Publish incremental pulses since last publish
+        uint32_t to_publish = pulses_in_last_period;
+
+        // Send as integer pulse count
+        xQueueOverwrite(actuator_fb_queue, &to_publish);
+
+        vTaskDelayUntil(&last_wake, period);
+    }
 }

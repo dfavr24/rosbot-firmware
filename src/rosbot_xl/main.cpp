@@ -111,6 +111,21 @@ void boardPheripheralsInit() {
   i2c.begin();
   i2c.setClock(400000);
 
+  // External GPIOs and PWM
+  pinMode(EXT_GPIO1, OUTPUT);
+  digitalWrite(EXT_GPIO1, HIGH);      // DIR pin default to HIGH (forward)
+
+  pinMode(EXT_GPIO2, OUTPUT);
+  digitalWrite(EXT_GPIO2, HIGH);      // EN pin default to HIGH (high-impedance)
+
+  pinMode(EXT_GPIO3, INPUT);          // Feedback sensor O/P  
+
+  pinMode(EXT_PWM1, OUTPUT);
+  analogWrite(EXT_PWM1, 0);           // Set PWM to 0% on startup
+
+  // Attach interrupt for external GPIO3 (feedback sensor)
+  attachInterrupt(digitalPinToInterrupt(EXT_GPIO3), extGpio3ISR, RISING);
+
   delay(50);
 }
 
@@ -142,6 +157,13 @@ void setMaxMotorsCurrent(Revision rev) {
     default:
       break;
   }
+}
+
+/*───────── External GPIO ISR ─────────*/
+volatile uint32_t ext_gpio3_pulse_count = 0;
+
+void extGpio3ISR() {
+    ext_gpio3_pulse_count++;
 }
 
 /*───────── Setup ─────────*/

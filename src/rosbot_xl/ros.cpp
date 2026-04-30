@@ -23,6 +23,7 @@
 #include <std_msgs/msg/float32_multi_array.h>
 #include <std_msgs/msg/string.h>
 #include <std_srvs/srv/trigger.h>
+#include <std_msgs/msg/u_int8_multi_array.h>
 
 #include "config.hpp"
 #include "led_strip.hpp"
@@ -33,15 +34,18 @@
 #include "ros/publishers/imu_publisher.hpp"
 #include "ros/publishers/joint_state_publisher.hpp"
 #include "ros/subscribers/led_subscriber.hpp"
+#include "ros/publishers/actuator_fb_publisher.hpp"
+#include "ros/subscribers/gpio_commands_subscriber.hpp"
 
 // PUBLISHERS
 static BatteryPublisher s_battery_pub(battery_pub_config);
 static ButtonsPublisher s_buttons_pub(buttons_pub_config);
 static ImuPublisher s_imu_pub(imu_pub_config);
 static JointStatePublisher s_joint_pub(joint_state_pub_config);
+static ActuatorFbPublisher s_actuator_fb_pub(actuator_fb_pub_config);
 
 static std::vector<PublisherInterface*> publishers = {
-    &s_battery_pub, &s_buttons_pub, &s_imu_pub, &s_joint_pub};
+    &s_battery_pub, &s_buttons_pub, &s_imu_pub, &s_joint_pub, &s_actuator_fb_pub};
 uint8_t pub_count = static_cast<uint8_t>(publishers.size());
 
 // SUBSCRIBERS
@@ -146,10 +150,29 @@ SubscriptionEntry motor_sub = {
     .best_effort = true,
 };
 
+// GPIO commands subscriber
+static std_msgs__msg__UInt8MultiArray s_gpio_cmd_msg = {
+    .layout = {},
+    .data = {
+        .data = new uint8_t[3](),  // [GPIO1, GPIO2, PWM1]
+        .size = 0,
+        .capacity = 3,
+    },
+};
+
+SubscriptionEntry gpio_commands_sub = {
+    .msg = &s_gpio_cmd_msg,
+    .type_support = ROSIDL_GET_MSG_TYPE_SUPPORT(std_msgs, msg, UInt8MultiArray),
+    .topic_name = "gpio_commands",
+    .callback = gpioCommandCallback,
+    .best_effort = true,
+};
+
 static std::vector<SubscriptionEntry> subscriptions = {
     leds_sub,
     led_strip_sub,
     motor_sub,
+    gpio_commands_sub,
 };
 
 // SERVICES
