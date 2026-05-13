@@ -80,6 +80,14 @@ CommunicationManager g_comm_mgr(communication_config);
 
 static float supplyVoltage() { return g_battery->getData().voltage; }
 
+/*───────── External GPIO ISR ─────────*/
+volatile uint32_t ext_gpio3_pulse_count = 0;
+
+void extGpio3ISR() {
+    // g_comm_mgr.debugSerial()->printf("\r\nActuator ISR Triggered (Pulse Count)= %u", ext_gpio3_pulse_count);
+    ext_gpio3_pulse_count++;
+}
+
 void boardPheripheralsInit() {
   // Audio
   pinMode(AUDIO_SHDN, OUTPUT);
@@ -157,13 +165,6 @@ void setMaxMotorsCurrent(Revision rev) {
     default:
       break;
   }
-}
-
-/*───────── External GPIO ISR ─────────*/
-volatile uint32_t ext_gpio3_pulse_count = 0;
-
-void extGpio3ISR() {
-    ext_gpio3_pulse_count++;
 }
 
 /*───────── Setup ─────────*/

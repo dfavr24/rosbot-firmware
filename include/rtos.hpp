@@ -19,6 +19,8 @@
 
 #include "communication_manager.hpp"
 
+extern volatile uint32_t ext_gpio3_pulse_count;
+
 static inline bool rtos_get_timestamp_ns(int64_t& timestamp_ns) {
   if (rmw_uros_epoch_synchronized()) {
     timestamp_ns = rmw_uros_epoch_nanos();

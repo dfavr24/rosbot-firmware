@@ -431,7 +431,7 @@ inline constexpr SerialConfig DIAGNOSTIC_SERIAL_CONFIG = {
 
 // -───────── Actuator Feedback Publisher ─────────
 // actuator feedback publisher (incremental pulse count from GPIO3 encoder)
-inline constexpr ActuatorFbPublisherConfig actuator_fb_pub_config = {
+inline ActuatorFbPublisherConfig actuator_fb_pub_config = {
     .topic = "actuator_feedback", 
     .queue = actuator_fb_queue,
 };

@@ -3,9 +3,9 @@
 #include <std_msgs/msg/u_int32.h>
 #include "publisher_interface.hpp"
 
-struct ActuatorFbPublisher {
+struct ActuatorFbPublisherConfig {
   const char* topic;
-  QueueHandle_t queue;
+  QueueHandle_t& queue;
 };
 
 class ActuatorFbPublisher : public PublisherInterface {
@@ -30,7 +30,7 @@ class ActuatorFbPublisher : public PublisherInterface {
     return rcl_publisher_fini(&pub_, &node);
   }
  private:
-  ActuatorFbPublisher cfg_;
+  ActuatorFbPublisherConfig cfg_;
   rcl_publisher_t pub_;
   std_msgs__msg__UInt32 msg_;
 };

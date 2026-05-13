@@ -38,6 +38,7 @@
 // ───── Externs ─────
 extern FanController g_fan;
 extern PowerBoard power_board;
+extern volatile uint32_t ext_gpio3_pulse_count;
 
 // ───── Queues ─────
 void createQueues() {
@@ -251,23 +252,26 @@ void uRosTask(void* p) {
 }
 
 void publishActuatorFeedbackTask(void* p) {
-    TickType_t period = pdMS_TO_TICKS(100); // 100ms interval
-    TickType_t last_wake = xTaskGetTickCount();
+    TickType_t period = taskGetPeriod(p);
+    TickType_t wake_time = xTaskGetTickCount();
 
-    static uint32_t prev_count = 0;
+    // static uint32_t prev_count = 0;
 
     while (1) {
-        uint32_t current_count = ext_gpio3_pulse_count;
-        uint32_t pulses_in_last_period = current_count - prev_count;
+        // uint32_t current_count = ext_gpio3_pulse_count;
+        // uint32_t pulses_in_last_period = current_count - prev_count;
 
-        prev_count = current_count;
+        // prev_count = current_count;
 
         //Publish incremental pulses since last publish
-        uint32_t to_publish = pulses_in_last_period;
+        // uint32_t to_publish = pulses_in_last_period;
+
+        //Publish cummulative total count
+        uint32_t to_publish = ext_gpio3_pulse_count;
 
         // Send as integer pulse count
         xQueueOverwrite(actuator_fb_queue, &to_publish);
 
-        vTaskDelayUntil(&last_wake, period);
+        vTaskDelayUntil(&wake_time, period);
     }
 }
